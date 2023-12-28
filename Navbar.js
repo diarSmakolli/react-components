@@ -1,5 +1,3 @@
-'use client'
-
 import {
   Box,
   Flex,
@@ -9,6 +7,7 @@ import {
   Stack,
   Collapse,
   Icon,
+  Link,
   Popover,
   PopoverTrigger,
   PopoverContent,
@@ -16,17 +15,29 @@ import {
   useBreakpointValue,
   useDisclosure,
   Image,
-  HStack,
-} from '@chakra-ui/react'
+  useColorMode,
+} from '@chakra-ui/react';
 import {
   HamburgerIcon,
   CloseIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-} from '@chakra-ui/icons'
+} from '@chakra-ui/icons';
+import { useNavigate } from "react-router-dom";
 
-export default function WithSubnavigation() {
-  const { isOpen, onToggle } = useDisclosure()
+export default function Nav({ loggedIn }) {
+  const { toggleColorMode } = useColorMode()
+  const { isOpen, onToggle } = useDisclosure();
+  const bg = useColorModeValue('red.500', 'red.200')
+  const color = useColorModeValue('white', 'gray.800')
+  let navigate = useNavigate();
+
+  function logoutHandler() {
+    localStorage.removeItem('accessToken');
+    setTimeout(() => {
+      navigate("/");
+      navigate(0);})
+  }
 
   return (
     <Box>
@@ -36,7 +47,9 @@ export default function WithSubnavigation() {
         minH={'60px'}
         py={{ base: 2 }}
         px={{ base: 4 }}
-        
+        borderBottom={1}
+        borderStyle={'solid'}
+        borderColor={useColorModeValue('gray.200', 'gray.900')}
         align={'center'}>
         <Flex
           flex={{ base: 1, md: 'auto' }}
@@ -44,54 +57,94 @@ export default function WithSubnavigation() {
           display={{ base: 'flex', md: 'none' }}>
           <IconButton
             onClick={onToggle}
-            icon={isOpen ? <CloseIcon w={3} h={3} /> : <HamburgerIcon w={5} h={5} />}
+            icon={
+              isOpen ? <CloseIcon w={3} h={3} /> : <HamburgerIcon w={5} h={5} />
+            }
             variant={'ghost'}
             aria-label={'Toggle Navigation'}
-            display={{base: 'none'}}
           />
-        
         </Flex>
-
-    
-
-
-
-
-
         <Flex flex={{ base: 1 }} justify={{ base: 'center', md: 'start' }}>
-          <Image src='https://www.dhl.de/etc.clientlibs/redesign/clientlibs/static/resources/icons/dhl-official.svg'
-          width='100px' height='auto'  display={{base: 'none' }}/>
+          <Image
+            width={'200px'}
+            src={
+              '/IMG/LOGORISK.png'
+            }
+            alt={'Logo image'}
+          />
 
           <Flex display={{ base: 'none', md: 'flex' }} ml={10}>
             <DesktopNav />
           </Flex>
         </Flex>
 
-        
+        <Stack
+          flex={{ base: 1, md: 0 }}
+          justify={'flex-end'}
+          direction={'row'}
+          spacing={6}>
+          {
+            loggedIn ? <Button
+              as={'a'}
+              fontSize={'sm'}
+              fontWeight={400}
+              onClick={logoutHandler}>
+              Dil
+            </Button> 
+              : <>
+                <Button
+                  as={'a'}
+                  fontSize={'sm'}
+                  fontWeight={400}
+                  variant={'link'}
+                  href={'/Signin'}>
+                  Hyr
+                </Button>
+                <Button
+                  as={'a'}
+                  fontSize={'sm'}
+                  fontWeight={600}
+                  color={'white'}
+                  bg={'pink.400'}
+                  href={'/Signup'}
+                  _hover={{
+                    bg: 'pink.300',
+                  }}>
+                  Regjistrohu
+                </Button>
+                {/* <Button size='sm' onClick={toggleColorMode}>
+                  Toggle Mode
+                </Button> */}
+              </>
+          }
+        </Stack>
       </Flex>
 
       <Collapse in={isOpen} animateOpacity>
         <MobileNav />
       </Collapse>
     </Box>
-  )
+  );
 }
 
-const DesktopNav = () => {
-  const linkColor = useColorModeValue('gray.600', 'gray.200')
-  const linkHoverColor = useColorModeValue('gray.800', 'white')
-  const popoverContentBgColor = useColorModeValue('white', 'gray.800')
+const DesktopNav = ({ loggedIn }) => {
+  const linkColor = useColorModeValue('gray.600', 'gray.200');
+  const linkHoverColor = useColorModeValue('gray.800', 'white');
+  const popoverContentBgColor = useColorModeValue('white', 'gray.800');
 
   return (
-    <Stack direction={'row'} spacing={4}>
+    <Stack align={'center'} direction={'row'} spacing={4}>
       {NAV_ITEMS.map((navItem) => (
         <Box key={navItem.label}>
           <Popover trigger={'hover'} placement={'bottom-start'}>
             <PopoverTrigger>
-              <Box
-                as="a"
+              <Link
                 p={2}
-                href={navItem.href ?? '#'}
+                href={
+                  (loggedIn && navItem.href  === 'Ballina')  ?
+                  (navItem.href ?? '#') : 
+                  '/LandingPage'
+                }
                 fontSize={'sm'}
                 fontWeight={500}
                 color={linkColor}
@@ -100,7 +153,7 @@ const DesktopNav = () => {
                   color: linkHoverColor,
                 }}>
                 {navItem.label}
-              </Box>
+              </Link>
             </PopoverTrigger>
 
             {navItem.children && (
@@ -122,13 +175,12 @@ const DesktopNav = () => {
         </Box>
       ))}
     </Stack>
-  )
-}
+  );
+};
 
 const DesktopSubNav = ({ label, href, subLabel }) => {
   return (
-    <Box
-      as="a"
+    <Link
       href={href}
       role={'group'}
       display={'block'}
@@ -156,35 +208,40 @@ const DesktopSubNav = ({ label, href, subLabel }) => {
           <Icon color={'pink.400'} w={5} h={5} as={ChevronRightIcon} />
         </Flex>
       </Stack>
-    </Box>
-  )
-}
+    </Link>
+  );
+};
 
 const MobileNav = () => {
   return (
-    <Stack bg={useColorModeValue('white', 'gray.800')} p={4} display={{ md: 'none' }}>
+    <Stack
+      bg={useColorModeValue('white', 'gray.800')}
+      p={4}
+      display={{ md: 'none' }}>
       {NAV_ITEMS.map((navItem) => (
         <MobileNavItem key={navItem.label} {...navItem} />
       ))}
     </Stack>
-  )
-}
+  );
+};
 
 const MobileNavItem = ({ label, children, href }) => {
-  const { isOpen, onToggle } = useDisclosure()
+  const { isOpen, onToggle } = useDisclosure();
 
   return (
     <Stack spacing={4} onClick={children && onToggle}>
-      <Box
+      <Flex
         py={2}
-        as="a"
+        as={Link}
         href={href ?? '#'}
-        justifyContent="space-between"
-        alignItems="center"
+        justify={'space-between'}
+        align={'center'}
         _hover={{
           textDecoration: 'none',
         }}>
-        <Text fontWeight={600} color={useColorModeValue('gray.600', 'gray.200')}>
+        <Text
+          fontWeight={600}
+          color={useColorModeValue('gray.600', 'gray.200')}>
           {label}
         </Text>
         {children && (
@@ -196,7 +253,7 @@ const MobileNavItem = ({ label, children, href }) => {
             h={6}
           />
         )}
-      </Box>
+      </Flex>
 
       <Collapse in={isOpen} animateOpacity style={{ marginTop: '0!important' }}>
         <Stack
@@ -208,51 +265,77 @@ const MobileNavItem = ({ label, children, href }) => {
           align={'start'}>
           {children &&
             children.map((child) => (
-              <Box as="a" key={child.label} py={2} href={child.href}>
+              <Link key={child.label} py={2} href={child.href}>
                 {child.label}
-              </Box>
+              </Link>
             ))}
         </Stack>
       </Collapse>
     </Stack>
-  )
-}
+  );
+};
 
 
 
 const NAV_ITEMS = [
   {
-    label: 'Pakete versenden',
+    label: 'Ballina',
+    href: '/',
+  },
+  {
+    label: 'Siguro',
     children: [
       {
-        label: 'Explore Design Work',
-        subLabel: 'Trending Design to inspire you',
-        href: '#',
+        label: 'Siguro veturën',
+        subLabel: '',
+        href: '/SiguroVeturen',
       },
       {
-        label: 'New & Noteworthy',
-        subLabel: 'Up-and-coming Designers',
-        href: '#',
+        label: 'Siguro shtëpine',
+        subLabel: '',
+        href: '/SiguroShtepin',
       },
+      {
+        label: 'Siguro shëndetin',
+        subLabel: '',
+        href: '/SiguroShendetin',
+      },
+      {
+        label: 'Siguro biznesin',
+        subLabel: '',
+        href: '/SiguroBiznesin',
+      },
+      {
+        label: 'Siguro shëndetin në udhëtim',
+        subLabel: '',
+        href: '/SiguroUdhetimin',
+      },
+      {
+        label: 'Siguro vetëveten',
+        subLabel: '',
+        href: '/SiguroVeteveten',
+      },
+
     ],
   },
   {
-    label: 'Pakete empfangen',
+    label: 'Shërbime online',
     children: [
       {
-        label: 'Job Board',
-        subLabel: 'Find your dream design job',
-        href: '#',
+        label: 'Raporto Dëmin',
+        subLabel: '',
+        href: '/RaportoDem',
       },
       {
-        label: 'Freelance Projects',
-        subLabel: 'An exclusive list for contract work',
-        href: '#',
+        label: 'Pagesa online',
+        subLabel: '',
+        href: '/Paguaj',
       },
     ],
   },
+
   {
-    label: 'Hilfe und Kontakt',
-    href: '#',
+    label: 'Kontakti',
+    href: '/Kontakti',
   },
-]
+];
